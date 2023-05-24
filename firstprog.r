@@ -30,7 +30,7 @@ str(data)
 # seeing first colum isnt a date variable
 data <- 
   data %>%
-  rename(date = ...1) %>%
+  rename(date = ...1,price=PRICE,prod = PROD, wage = COMPH,unemp=UR) %>%
   mutate(date = ymd(paste(date, "-01", sep="")))
   
   
@@ -55,15 +55,21 @@ TS
 # start at 2 since we gonna use lag variables
 
 data <- 
-  data %>% 
-  mutate(price = data[2:TS,5],
-         prod  = data[2:TS,2],
-         wage  = data[2:TS,4],
-         unemp = data[2:TS,8],
-         pricelag = lag(price,1),
-         prodlag  = lag(prod,1),
-         wagelag  = lag(wage,1),
-         unemplag = lag(unemp,1),
+  data %>%
+  mutate(#price       = data[2:TS,5],    i guess we can just keep them
+         #prod        = data[2:TS,2],    simply adds a NA in that obs.
+         #wage        = data[2:TS,4],
+         #unemp       = data[2:TS,8],
+         pricelag    = lag(price,1),
+         prodlag     = lag(prod,1),
+         wagelag     = lag(wage,1),
+         unemplag    = lag(unemp,1),
+         pricedouble = price * 2, 
+         lnprice     = log(price),
+         lnpricelag  = lag(lnprice,1),
+         infl        = 100*(lnprice - lnpricelag),
+         w           = 100*(log(wage) - log(wagelag)), # wage changes
+         mpl         = 100*(log(prod) - log(prodlag))  # prod changes
          ) 
   
 
@@ -80,13 +86,13 @@ data <-
 
 
 # lagging with dplyr 
-pricelag <- lag(price,1)
-prodlag <- lag(prod,1)
-wagelag <- lag(wage,1)
-unemplag <- lag(unemp,1)
+#pricelag <- lag(price,1)
+#prodlag <- lag(prod,1)
+#wagelag <- lag(wage,1)
+#unemplag <- lag(unemp,1)
 
 # test if lag variavles are the same
-pricelag == pricelag_R
+#pricelag == pricelag_R
 
 
 
@@ -94,38 +100,51 @@ pricelag == pricelag_R
 
 
 # Variable transformations
-pricedouble <- price * 2
-lnprice <- log(price)
-lnpricelag <- log(pricelag)
+#pricedouble <- price * 2
+#lnprice <- log(price)
+#lnpricelag <- log(pricelag)
 
 
-infl <- 100*(lnprice - lnpricelag)
-w <- 100*(log(wage) - log(wagelag)) # wage changes
-mpl <- as.vector(100*(log(prod) - log(prodlag))) # prod changes
+#infl <- 100*(lnprice - lnpricelag)
+#w <- 100*(log(wage) - log(wagelag)) # wage changes
+#mpl <- 100*(log(prod) - log(prodlag)) # prod changes
 
 
 
-TS <-  dim(infl)[1] # Adjust length of the time series
-
+#TS <-  dim(data)[1] # Adjust length of the time series
+TS <-  length(data$infl)
 # Graphing Data
  
-graphdata <- cbind(mpl,w) # combine mpl with w
+graphdata <- cbind(data$mpl,data$w) # combine mpl with w
 
 plot.ts(graphdata, plot.type = "multiple")
 # indexing because mpl and w are data frames
-ggplot(data,aes(x=w[[1]],y=mpl[[1]]))+
+ggplot(data,aes(x=w,y=mpl))+
   geom_point()+
   xlab("mpl")+
   ylab("w")+
   ggtitle("Scatterplot")
 
 
-  
+# tidyverse version of regression 
+reg1data <- 
+  data %>% 
+  mutate(laginfl1 = lag(infl,1),
+         laginfl2 = lag(infl,2),
+         laginfl3 = lag(infl,3),
+         laginfl4 = lag(infl,4)) %>% 
+  select(infl,laginfl1,laginfl2,laginfl3,laginfl4,mpl,w) %>%
+  slice(6:n())
+
+reg1 <- lm(w ~ laginfl1 + laginfl2 + laginfl3 + laginfl4 + mpl,data=reg1data)
+
+summary(reg1)
 
 
-# Doing simple regressions
-X <- cbind(infl[4:(TS-1)],infl[3:(TS-2)],infl[2:(TS-3)],infl[1:(TS-4)],mpl[5:TS])
-y <- w[5:TS]
+# Reitz version 
+X <- cbind(data$infl[5:(TS-1)],data$infl[4:(TS-2)],data$infl[3:(TS-3)],
+           data$infl[2:(TS-4)],data$mpl[6:TS])
+y <- data$w[6:TS]
 
 wageeq1 <- lm(y ~ X)
 summary(wageeq1)
