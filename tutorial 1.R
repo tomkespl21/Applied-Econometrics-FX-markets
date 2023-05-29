@@ -25,8 +25,10 @@ data2$USD = as.numeric(data2$USD)
 data2$EURUSD = 1/data2$USD
 data2$Date = as.Date(with(data,paste(Year,Month,Day,sep="-")),"%Y-%m-%d")
 logreturn = diff(log(data2$EURUSD))
+sqlogreturn = diff(log(data2$USD^2))
 
 plot(logreturn)
+plot(sqlogreturn)
 
 # change columns to numerical 
 # and geneate EUR/USD variable
