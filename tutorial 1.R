@@ -24,10 +24,18 @@ data2 <- read.csv("spot_rates.csv", header =TRUE,sep=";",dec = ",")
 data2$USD = as.numeric(data2$USD)
 data2$EURUSD = 1/data2$USD
 data2$Date = as.Date(with(data,paste(Year,Month,Day,sep="-")),"%Y-%m-%d")
-logreturn = diff(log(data2$EURUSD))
-sqlogreturn = diff(log(data2$USD^2))
 
+#b) 
+EURUSD = 1/data2$USD
+plot(EURUSD, type="l")
+
+# c)
+logreturn = diff(log(data2$EURUSD))
 plot(logreturn)
+
+#d)
+
+sqlogreturn = diff(log(data2$USD^2))
 plot(sqlogreturn)
 
 # change columns to numerical 
@@ -64,6 +72,55 @@ ggplot(data = data,aes(x=DATE,y=EURUSD))+
   geom_line()+
   xlab("date")+
   ylab("logreturn")
+
+
+#f)
+
+par( mfrow= c(3,1) )
+plot(EURUSD, type="l")
+plot(logreturn)
+plot(sqlogreturn)
+
+
+
+
+# 2 OLS Estimation 
+
+
+
+# a) 
+
+OLS_1 <-  function(y,X){
+  
+  solve(t(X)%*%X)%*% t(X) %*% y
+  
+}
+
+
+
+
+# b)
+
+OLS_2 <- function(y,X){
+  
+  betahead = solve(t(X)%*%X)%*% t(X) %*% y
+}
+
+
+#3.
+
+# coeftest(fit, vcov=vcovHC(model, type="HC1"))
+# coeftest(fit, vcov.=NeweyWest(model,...)
+
+
+
+
+
+
+
+
+
+
 
 
 
