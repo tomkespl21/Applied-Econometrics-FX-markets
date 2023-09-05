@@ -1,98 +1,58 @@
-################################################################################
-# Project: Phillips Curve Estimations                                          #
-# Dataset: firstprog_data.csv                                                  #
-# Date: 27.03.20                                                               #
-# Author: Stefan Reitz  / Tomke Splettstößer                                   #
-################################################################################
+####################################################################
+# Project: Phillips Curve Estimations                              #            
+# Dataset: firstprog_data.csv                                      #             
+#                                                                  #                    #             
+####################################################################
 
 rm(list=ls())     # clear workspace
 
-library(tidyverse)
-library(lubridate)
-library(zoo)
 
 # Reitz option 
-data2 <- read.csv("firstprog_data.csv", header =TRUE,sep=";", dec="." , check.names=TRUE)
+data <- read.csv("firstprog_data.csv", header =TRUE,sep=";", dec="." , check.names=TRUE)
 # I prefer to set working direction before s.t. path not needed 
 
+library(dplyr)
 
-data <- read_delim("firstprog_data.csv",
-                    delim = ";",
-                    col_names = T,
-                    locale=locale(decimal_mark = "."))
+View(data) # obv. to view data  
+str(data)  # display structure of R object
 
-
-view(data)
-str(data)
-
-
-
-# seeing first colum isnt a date variable
-data <- 
-  data %>%
-  rename(date = ...1,price=PRICE,prod = PROD, wage = COMPH,unemp=UR) %>%
-  mutate(date = ymd(paste(date, "-01", sep="")))
   
   
-  
-
-#print(data[1:10,])
-# print function not really necessary 
+print(data[1:10,]) # show first 10 rows 
+# print function not really necessary in R (different to python)
 data[1:10,]
-data2[1:10,]
 
 # How long is the data set(time series dimension)?
-# T <- dim(Data)[1]
-#print(TS)
+T <- dim(data)[1]
 # dont like the use of name "T" because in R this is short for "true"
 
-# indexing to get number of rows 
-# R starts counting at 1 not 0 ! 
-TS <- dim(data)[1]
+# indexing to get number of rows:
+TS <- dim(data)[1] # R starts counting at 1 not 0 ! 
 TS
 
-# Variable definitions
-# start at 2 since we gonna use lag variables
-
-data <- 
-  data %>%
-  mutate(#price       = data[2:TS,5],    i guess we can just keep them
-         #prod        = data[2:TS,2],    simply adds a NA in that obs.
-         #wage        = data[2:TS,4],
-         #unemp       = data[2:TS,8],
-         pricelag    = lag(price,1),
-         prodlag     = lag(prod,1),
-         wagelag     = lag(wage,1),
-         unemplag    = lag(unemp,1),
-         pricedouble = price * 2, 
-         lnprice     = log(price),
-         lnpricelag  = lag(lnprice,1),
-         infl        = 100*(lnprice - lnpricelag),
-         w           = 100*(log(wage) - log(wagelag)), # wage changes
-         mpl         = 100*(log(prod) - log(prodlag))  # prod changes
-         ) 
-  
-
-# Reitz variable transformations
-#price <- data[2:TS,5]
-#prod <- data[2:TS,2]
-#wage <- data[2:TS,4]
-#unemp <- data[2:TS,8]
 
 
-#pricelag_R <- data[1:(TS-1),5]
-#prodlag_R <- data[1:(TS-1),2]
-#wagelag_R <- data[1:(TS-1),4]
+# variable transformations:
+
+ price <- data[2:TS,5] 
+ prod <- data[2:TS,2]
+ wage <- data[2:TS,4]
+ unemp <- data[2:TS,8]
+
+
+pricelag_R <- data[1:(TS-1),5]
+prodlag_R <- data[1:(TS-1),2]
+wagelag_R <- data[1:(TS-1),4]
 
 
 # lagging with dplyr 
-#pricelag <- lag(price,1)
-#prodlag <- lag(prod,1)
-#wagelag <- lag(wage,1)
-#unemplag <- lag(unemp,1)
+pricelag <- lag(price,1)
+prodlag <- lag(prod,1)
+wagelag <- lag(wage,1)
+unemplag <- lag(unemp,1)
 
 # test if lag variavles are the same
-#pricelag == pricelag_R
+pricelag == pricelag_R
 
 
 
