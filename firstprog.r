@@ -45,29 +45,16 @@ prodlag_R <- data[1:(TS-1),2]
 wagelag_R <- data[1:(TS-1),4]
 
 
-# lagging with dplyr 
-pricelag <- lag(price,1)
-prodlag <- lag(prod,1)
-wagelag <- lag(wage,1)
-unemplag <- lag(unemp,1)
-
-# test if lag variavles are the same
-pricelag == pricelag_R
-
-
-
-
-
 
 # Variable transformations
-#pricedouble <- price * 2
-#lnprice <- log(price)
-#lnpricelag <- log(pricelag)
+pricedouble <- price * 2
+lnprice <- log(price)
+lnpricelag <- log(pricelag_R)
 
 
-#infl <- 100*(lnprice - lnpricelag)
-#w <- 100*(log(wage) - log(wagelag)) # wage changes
-#mpl <- 100*(log(prod) - log(prodlag)) # prod changes
+infl <- 100*(lnprice - lnpricelag)
+w <- 100*(log(wage) - log(wagelag)) # wage changes
+mpl <- 100*(log(prod) - log(prodlag)) # prod changes
 
 
 
@@ -78,35 +65,20 @@ TS <-  length(data$infl)
 graphdata <- cbind(data$mpl,data$w) # combine mpl with w
 
 plot.ts(graphdata, plot.type = "multiple")
-# indexing because mpl and w are data frames
-ggplot(data,aes(x=w,y=mpl))+
-  geom_point()+
-  xlab("mpl")+
-  ylab("w")+
-  ggtitle("Scatterplot")
 
 
-# tidyverse version of regression 
-reg1data <- 
-  data %>% 
-  mutate(laginfl1 = lag(infl,1),
-         laginfl2 = lag(infl,2),
-         laginfl3 = lag(infl,3),
-         laginfl4 = lag(infl,4)) %>% 
-  select(infl,laginfl1,laginfl2,laginfl3,laginfl4,mpl,w) %>%
-  slice(6:n())
-
-reg1 <- lm(w ~ laginfl1 + laginfl2 + laginfl3 + laginfl4 + mpl,data=reg1data)
-
-summary(reg1)
 
 
-# Reitz version 
+# independent variable matrix  
 X <- cbind(data$infl[5:(TS-1)],data$infl[4:(TS-2)],data$infl[3:(TS-3)],
            data$infl[2:(TS-4)],data$mpl[6:TS])
+
+# dependent variable 
 y <- data$w[6:TS]
 
+# run regression
 wageeq1 <- lm(y ~ X)
+
 summary(wageeq1)
 
 
