@@ -7,11 +7,10 @@
 rm(list=ls())     # clear workspace
 
 
-# Reitz option 
+# load in data
 data <- read.csv("firstprog_data.csv", header =TRUE,sep=";", dec="." , check.names=TRUE)
 # I prefer to set working direction before s.t. path not needed 
 
-library(dplyr)
 
 View(data) # obv. to view data  
 str(data)  # display structure of R object
@@ -33,62 +32,69 @@ TS
 
 
 # variable transformations:
+ price <- data[2:TS,5] # assign 5th column starting with second row  
+ prod <- data[2:TS,2]  # assign 2th column starting with second row
+ wage <- data[2:TS,4]  # assign 4th column starting with second row
+ unemp <- data[2:TS,8] # assign 8th column starting with second row
 
- price <- data[2:TS,5] 
- prod <- data[2:TS,2]
- wage <- data[2:TS,4]
- unemp <- data[2:TS,8]
 
-
-pricelag_R <- data[1:(TS-1),5]
-prodlag_R <- data[1:(TS-1),2]
-wagelag_R <- data[1:(TS-1),4]
+pricelag_R <- data[1:(TS-1),5] #assign 5th column starting with first row  
+prodlag_R <- data[1:(TS-1),2]  #assign 2th column starting with first row
+wagelag_R <- data[1:(TS-1),4]  #assign 4th column starting with first row
 
 
 
 # Variable transformations
-pricedouble <- price * 2
-lnprice <- log(price)
-lnpricelag <- log(pricelag_R)
+pricedouble <- price * 2    # assign double price to variable
+lnprice <- log(price)       # assign logarithm of price to variable
+lnpricelag <- log(pricelag_R) # assign lagged logarithm of price to variable
 
 
-infl <- 100*(lnprice - lnpricelag)
-w <- 100*(log(wage) - log(wagelag)) # wage changes
-mpl <- 100*(log(prod) - log(prodlag)) # prod changes
+infl <- 100*(lnprice - lnpricelag)   # assign/compute inflation
+w <- 100*(log(wage) - log(wagelag_R)) # assign/compute wage changes
+mpl <- 100*(log(prod) - log(prodlag_R)) # assign/compute  prod changes
 
 
 
 #TS <-  dim(data)[1] # Adjust length of the time series
-TS <-  length(data$infl)
-# Graphing Data
- 
-graphdata <- cbind(data$mpl,data$w) # combine mpl with w
+TS <-  length(infl) # 
 
+ 
+# save data needed for time series graph:
+graphdata <- cbind(mpl,w) # combine mpl with w
+
+# plot time series for mpl and wage change 
 plot.ts(graphdata, plot.type = "multiple")
 
 
 
 
 # independent variable matrix  
-X <- cbind(data$infl[5:(TS-1)],data$infl[4:(TS-2)],data$infl[3:(TS-3)],
-           data$infl[2:(TS-4)],data$mpl[6:TS])
+X <- cbind(data$infl[5:(TS-1)],infl[4:(TS-2)],infl[3:(TS-3)],
+           infl[2:(TS-4)],mpl[6:TS])
 
 # dependent variable 
-y <- data$w[6:TS]
+y <- w[6:TS]
 
 # run regression
 wageeq1 <- lm(y ~ X)
 
+# show regression table:
 summary(wageeq1)
 
 
 ############################
-X <- cbind(infl[4:(TS-1)],infl[3:(TS-2)],infl[2:(TS-3)],infl[1:(TS-4)],mpl[5:TS],unemp[5:T])
+
+# add additional variables to reduces omitted variable bias
+
+X <- cbind(infl[4:(TS-1)],infl[3:(TS-2)],infl[2:(TS-3)],infl[1:(TS-4)],mpl[5:TS],unemp[5:TS])
 y <- w[5:TS]
 colnames(X) <- c("Infl_-1", "Infl_-2", "Infl_-3", "Infl_-4", "MPL", "Unemp")
 
 wageeq2 <- lm(y ~ X)
 summary(wageeq2)
+
+# first lag inflation , mpl and unemp significant 
 
 ############################
 X <- cbind(infl[4:(TS-1)],infl[3:(TS-2)],infl[2:(TS-3)],infl[1:(TS-4)],mpl[5:TS],unemp[5:TS])
@@ -127,6 +133,12 @@ plot.ts(graphdata, plot.type = "single", col = c("blue","red"))
 ########################################################
 
 #Durbin Watson Statistic
+
+library(lmtest) # for dwtest function 
+
+dwtest(Philleq)
+
+# compute sta durbin watson statistic without function:
 U <- Philleq$residuals
 #U <- wageeq2$residuals
 TS <- length(U)
