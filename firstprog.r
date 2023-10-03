@@ -144,20 +144,27 @@ U <- Philleq$residuals
 TS <- length(U)
 
 ut <- U[2:TS]
-ut_1 <- U[1:(TS-1)]
 
-DW <- (t(ut - ut_1)%*%(ut - ut_1))/(t(ut)%*%ut)
+ut_1 <- U[1:(TS-1)] # lagged residuals
+
+DW <- (t(ut - ut_1)%*%(ut - ut_1))/(t(ut)%*%ut) # DW stat formula
 print(DW)
 
 #######################################################
 
 ## Ljung Box Q
 
-ut <- U[5:T]
-ut_1 <- U[4:(T-1)]
-ut_2 <- U[3:(T-2)]
-ut_3 <- U[2:(T-3)]
-ut_4 <- U[1:(T-4)]
+# test of autocorrelation in time series 
+
+Box.test(ut, lag = 4, type = "Ljung")
+
+# residual vector 
+ut <- U[5:TS]
+# lagged residuals
+ut_1 <- U[4:(TS-1)]
+ut_2 <- U[3:(TS-2)]
+ut_3 <- U[2:(TS-3)]
+ut_4 <- U[1:(TS-4)]
 
 errors <- cbind(ut, ut_1, ut_2, ut_3, ut_4)
 
@@ -166,7 +173,8 @@ print(errors)
 correls <- cor(errors)
 print(correls)
 
-LBQTest <- T*(T + 2)*(correls[2,1]^2/(T-1) + correls[3,1]^2/(T-2) + correls[4,1]^2/(T-3) + correls[5,1]^2/(T-4))
+# statistic formula: 
+LBQTest <- TS*(TS + 2)*(correls[2,1]^2/(TS-1) + correls[3,1]^2/(TS-2) + correls[4,1]^2/(TS-3) + correls[5,1]^2/(TS-4))
 print(LBQTest)
 
 critval <- qchisq(0.95, 4)
@@ -177,6 +185,4 @@ print(p_val)
 #########################################################
 
 
-# We leave the coding for the heteroscedasticiy test and the Jarque Bera Test
-# for an excercise
 
